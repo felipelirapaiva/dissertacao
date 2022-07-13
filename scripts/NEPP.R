@@ -5,41 +5,37 @@ library(haven)
 library(readr)
 library(tidyr)
 
-
 link <- "https://github.com/felipelirapaiva/dissertacao/blob/main/rawdata/deputados.csv?raw=true"
 download.file(link, "deputados.csv")
 deputados <- read.csv("deputados.csv", dec = ",", encoding = "UTF-8", check.names = FALSE)
 
 
-# deputados_estaduais <- read.csv("~/Dissertacao R/Diss/deputados_estaduais.csv")
-
-
+# Contando a magnitude distrital
 seats <- deputados %>%
   group_by (ANO_ELEICAO, UF)%>%
   count()%>%
   rename(cadeiras = n)
 
-
+# Contando número de parlamentares eleitos por partido por mandato por UF
 parlamentares <- deputados %>%
   group_by(ANO_ELEICAO, UF, SIGLA_PARTIDO)%>%
   count()%>%
   rename (eleitos = n)
 
-
+# Mergindo os bancos
 library(scales)
 NEPP <- left_join(parlamentares, seats,
                   by = c("UF" = "UF",
                          "ANO_ELEICAO" = "ANO_ELEICAO"))
 
 
+# Operações matemáticas para chegar ao NEPP
   NEPP$divisao <- NEPP$eleitos / NEPP$cadeiras
   NEPP$quadrado <- NEPP$divisao * NEPP$divisao
-  
   
   NEPP <- NEPP %>%
     group_by(ANO_ELEICAO, UF)%>%
     summarise(soma = sum(quadrado))
-  
   
   NEPP$final <- 1 / NEPP$soma
   
